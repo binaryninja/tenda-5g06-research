@@ -55,10 +55,11 @@ generated PoC output are intentionally excluded.
 
 ## Key Findings
 
-The strongest validated issue is **unauthenticated root command execution over
-the web management interface** on a password-configured Tenda 5G06 V1.0. Plain
-protected routes redirect to login, but the same handlers are reachable without
-a session when the request path appends `%00.js`.
+The most significant validated finding is **unauthenticated root-level command
+execution via the web management interface** of a password-configured Tenda 5G06
+V1.0. While protected routes normally redirect unauthenticated requests to the
+login page, the underlying handlers can be invoked without a valid session by
+appending `%00.js` to the request path.
 
 Highest impact vector:
 
