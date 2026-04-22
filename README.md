@@ -83,6 +83,11 @@ See the full mapping in
 [`docs/FINDINGS_SUMMARY.md`](docs/FINDINGS_SUMMARY.md) and the validation log in
 [`docs/POC_RESULTS.md`](docs/POC_RESULTS.md).
 
+For the full chronological research trail, including command history,
+intermediate hypotheses, validation notes, and raw reproduction context, see the
+detailed worklog:
+[`docs/WORKLOG.md`](docs/WORKLOG.md).
+
 ## Quick Start
 
 Install Docker and run from the repository root.
@@ -133,8 +138,9 @@ credentials, and other secrets.
 
 ## Main References
 
+- [docs/WORKLOG.md](docs/WORKLOG.md) - detailed chronological worklog and
+  validation trail
 - [docs/AUTH_DEEP_DIVE.md](docs/AUTH_DEEP_DIVE.md)
 - [docs/CONFIG_BACKUP_DEEP_DIVE.md](docs/CONFIG_BACKUP_DEEP_DIVE.md)
 - [docs/POC_RESULTS.md](docs/POC_RESULTS.md)
 - [docs/FINDING_R07_WFA_DUT_UNAUTH_RCE.md](docs/FINDING_R07_WFA_DUT_UNAUTH_RCE.md)
-- [docs/WORKLOG.md](docs/WORKLOG.md)
