@@ -67,14 +67,85 @@ Highest impact vector:
 CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H = 9.8
 ```
 
-| ID | Severity | Finding | Impact | Details | Primary PoC |
-| --- | --- | --- | --- | --- | --- |
-| F01 | Critical | ZeroTier auth-bypass RCE | Unauthenticated attacker supplies `zerotier.tar`; firmware extracts it and executes `start_zerotier.sh` as `uid=0(root)`. Full confidentiality, integrity, and availability impact. | [`AUTH_DEEP_DIVE.md`](docs/AUTH_DEEP_DIVE.md), [`ATTACK_SURFACE_DEEP_DIVE.md`](docs/ATTACK_SURFACE_DEEP_DIVE.md), [`POC_RESULTS.md`](docs/POC_RESULTS.md) | [`pocs/poc_zerotier_unauth_rce.py`](pocs/poc_zerotier_unauth_rce.py) |
-| F02 | Critical | Generic NUL-suffix web auth bypass | Protected handlers are dispatched without a valid session by appending `%00.js`. This is the primitive behind RCE, config theft, log theft, telnet enablement, ATE enablement, and protected API access. | [`AUTH_DEEP_DIVE.md`](docs/AUTH_DEEP_DIVE.md), [`ROUTE_PROBE_RESULTS.md`](docs/ROUTE_PROBE_RESULTS.md) | [`pocs/poc_auth_bypass_telnet.py`](pocs/poc_auth_bypass_telnet.py), [`pocs/poc_auth_bypass_ate.py`](pocs/poc_auth_bypass_ate.py), [`pocs/poc_auth_bypass_getmodules.py`](pocs/poc_auth_bypass_getmodules.py), [`pocs/poc_auth_bypass_setmodules.py`](pocs/poc_auth_bypass_setmodules.py) |
-| F03 | High | Config backup disclosure and offline decode | Unauthenticated download of protected config backup; static AES-128-ECB key allows offline extraction of Wi-Fi PSKs, password hashes, WireGuard key material, CWMP credentials, and network configuration. | [`CONFIG_BACKUP_DEEP_DIVE.md`](docs/CONFIG_BACKUP_DEEP_DIVE.md), [`AUTH_DEEP_DIVE.md`](docs/AUTH_DEEP_DIVE.md) | [`pocs/poc_auth_bypass_download_cfg.py`](pocs/poc_auth_bypass_download_cfg.py), [`tools/decode_tenda_config_backup.sh`](tools/decode_tenda_config_backup.sh) |
-| F04 | High | Log archive disclosure | Unauthenticated download of protected log archive. Logs may expose operational state, network identifiers, diagnostics, and sensitive event history. | [`AUTH_DEEP_DIVE.md`](docs/AUTH_DEEP_DIVE.md), [`ROUTE_PROBE_RESULTS.md`](docs/ROUTE_PROBE_RESULTS.md) | [`pocs/poc_auth_bypass_download_log.py`](pocs/poc_auth_bypass_download_log.py) |
-| F05 | High | WFA/Sigma command injection | rc.d starts WFA/Sigma test daemons. Direct frames to stock `wfa_dut:8000` can inject shell metacharacters into command handlers; `wfa_ca` is not required if DUT port is reachable. | [`FINDING_R07_WFA_DUT_UNAUTH_RCE.md`](docs/FINDING_R07_WFA_DUT_UNAUTH_RCE.md), [`R07_WFA_COMMAND_INJECTION_POC.md`](docs/R07_WFA_COMMAND_INJECTION_POC.md), [`RCD_BOOT_PROBE_RESULTS.md`](docs/RCD_BOOT_PROBE_RESULTS.md) | [`pocs/poc_wfa_direct_dut_cmd_injection.py`](pocs/poc_wfa_direct_dut_cmd_injection.py), [`pocs/poc_wfa_sta_get_mac_cmd_injection.py`](pocs/poc_wfa_sta_get_mac_cmd_injection.py), [`pocs/poc_wfa_sta_get_ip_config_cmd_injection.py`](pocs/poc_wfa_sta_get_ip_config_cmd_injection.py), [`pocs/poc_wfa_sta_set_ip_config_cmd_injection.py`](pocs/poc_wfa_sta_set_ip_config_cmd_injection.py) |
-| F06 | Medium | Session and CSRF weaknesses | Login cookie lacks `HttpOnly`, `Secure`, and `SameSite`; selected state-changing routes accept authenticated requests without a referer. These increase exploitability but are not needed for the unauthenticated RCE chain. | [`AUTH_DEEP_DIVE.md`](docs/AUTH_DEEP_DIVE.md), [`ATTACK_SURFACE_DEEP_DIVE.md`](docs/ATTACK_SURFACE_DEEP_DIVE.md), [`POC_RESULTS.md`](docs/POC_RESULTS.md) | [`pocs/poc_cookie_missing_security_flags.py`](pocs/poc_cookie_missing_security_flags.py), [`pocs/poc_csrf_missing_referer_ate.py`](pocs/poc_csrf_missing_referer_ate.py) |
+### F01 Critical - ZeroTier Auth-Bypass RCE
+
+Impact: An unauthenticated attacker supplies `zerotier.tar`; the firmware
+extracts it and executes `start_zerotier.sh` as `uid=0(root)`. This is full
+device compromise with confidentiality, integrity, and availability impact.
+
+Details: [`AUTH_DEEP_DIVE.md`](docs/AUTH_DEEP_DIVE.md),
+[`ATTACK_SURFACE_DEEP_DIVE.md`](docs/ATTACK_SURFACE_DEEP_DIVE.md),
+[`POC_RESULTS.md`](docs/POC_RESULTS.md)
+
+Primary PoC: [`pocs/poc_zerotier_unauth_rce.py`](pocs/poc_zerotier_unauth_rce.py)
+
+### F02 Critical - Generic NUL-Suffix Web Auth Bypass
+
+Impact: Protected handlers are dispatched without a valid session by appending
+`%00.js`. This is the primitive behind RCE, config theft, log theft, telnet
+enablement, ATE enablement, and protected API access.
+
+Details: [`AUTH_DEEP_DIVE.md`](docs/AUTH_DEEP_DIVE.md),
+[`ROUTE_PROBE_RESULTS.md`](docs/ROUTE_PROBE_RESULTS.md)
+
+PoCs: [`pocs/poc_auth_bypass_telnet.py`](pocs/poc_auth_bypass_telnet.py),
+[`pocs/poc_auth_bypass_ate.py`](pocs/poc_auth_bypass_ate.py),
+[`pocs/poc_auth_bypass_getmodules.py`](pocs/poc_auth_bypass_getmodules.py),
+[`pocs/poc_auth_bypass_setmodules.py`](pocs/poc_auth_bypass_setmodules.py)
+
+### F03 High - Config Backup Disclosure And Offline Decode
+
+Impact: The protected config backup can be downloaded without authentication.
+The static AES-128-ECB key allows offline extraction of Wi-Fi PSKs, password
+hashes, WireGuard key material, CWMP credentials, and network configuration.
+
+Details: [`CONFIG_BACKUP_DEEP_DIVE.md`](docs/CONFIG_BACKUP_DEEP_DIVE.md),
+[`AUTH_DEEP_DIVE.md`](docs/AUTH_DEEP_DIVE.md)
+
+PoC and tool:
+[`pocs/poc_auth_bypass_download_cfg.py`](pocs/poc_auth_bypass_download_cfg.py),
+[`tools/decode_tenda_config_backup.sh`](tools/decode_tenda_config_backup.sh)
+
+### F04 High - Log Archive Disclosure
+
+Impact: The protected log archive can be downloaded without authentication.
+Logs may expose operational state, network identifiers, diagnostics, and
+sensitive event history.
+
+Details: [`AUTH_DEEP_DIVE.md`](docs/AUTH_DEEP_DIVE.md),
+[`ROUTE_PROBE_RESULTS.md`](docs/ROUTE_PROBE_RESULTS.md)
+
+Primary PoC:
+[`pocs/poc_auth_bypass_download_log.py`](pocs/poc_auth_bypass_download_log.py)
+
+### F05 High - WFA/Sigma Command Injection
+
+Impact: rc.d starts WFA/Sigma test daemons. Direct frames to stock
+`wfa_dut:8000` can inject shell metacharacters into command handlers; `wfa_ca`
+is not required if the DUT port is reachable.
+
+Details:
+[`FINDING_R07_WFA_DUT_UNAUTH_RCE.md`](docs/FINDING_R07_WFA_DUT_UNAUTH_RCE.md),
+[`R07_WFA_COMMAND_INJECTION_POC.md`](docs/R07_WFA_COMMAND_INJECTION_POC.md),
+[`RCD_BOOT_PROBE_RESULTS.md`](docs/RCD_BOOT_PROBE_RESULTS.md)
+
+PoCs: [`pocs/poc_wfa_direct_dut_cmd_injection.py`](pocs/poc_wfa_direct_dut_cmd_injection.py),
+[`pocs/poc_wfa_sta_get_mac_cmd_injection.py`](pocs/poc_wfa_sta_get_mac_cmd_injection.py),
+[`pocs/poc_wfa_sta_get_ip_config_cmd_injection.py`](pocs/poc_wfa_sta_get_ip_config_cmd_injection.py),
+[`pocs/poc_wfa_sta_set_ip_config_cmd_injection.py`](pocs/poc_wfa_sta_set_ip_config_cmd_injection.py)
+
+### F06 Medium - Session And CSRF Weaknesses
+
+Impact: The login cookie lacks `HttpOnly`, `Secure`, and `SameSite`; selected
+state-changing routes accept authenticated requests without a referer. These
+increase exploitability but are not needed for the unauthenticated RCE chain.
+
+Details: [`AUTH_DEEP_DIVE.md`](docs/AUTH_DEEP_DIVE.md),
+[`ATTACK_SURFACE_DEEP_DIVE.md`](docs/ATTACK_SURFACE_DEEP_DIVE.md),
+[`POC_RESULTS.md`](docs/POC_RESULTS.md)
+
+PoCs: [`pocs/poc_cookie_missing_security_flags.py`](pocs/poc_cookie_missing_security_flags.py),
+[`pocs/poc_csrf_missing_referer_ate.py`](pocs/poc_csrf_missing_referer_ate.py)
 
 Configured-state evidence:
 
