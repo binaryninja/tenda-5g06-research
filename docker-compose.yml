@@ -1,0 +1,15 @@
+services:
+  firmware-qemu:
+    build:
+      context: .
+    image: tenda-b104-qemu:latest
+    privileged: true
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./downloads:/firmware/downloads
+      - ./work:/work
+    environment:
+      FIRMWARE_ARCHIVE: /firmware/downloads/sample_latest.zip
+      WORKDIR: /work
+      FIRMWARE_CMD: /bin/sh
