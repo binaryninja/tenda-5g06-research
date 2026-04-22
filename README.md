@@ -49,21 +49,39 @@ generated PoC output are intentionally excluded.
 
 ## Key Findings
 
-- NUL-suffix route confusion bypasses auth for protected web routes.
-- `/goform/zerotier%00.js` can fetch, extract, and execute an attacker-supplied
-  `zerotier.tar` script as `uid=0(root)`.
-- `/cgi-bin/DownloadCfg%00.js` downloads the protected config backup without a
-  valid session in the password-configured state.
-- The config backup is decryptable offline with a static AES-128-ECB key and
-  contains sensitive config material including Wi-Fi keys and password hashes.
-- WFA/Sigma test daemons are launched by rc.d and expose command-injection
-  paths, including direct raw TLV injection into stock `wfa_dut:8000`.
+The strongest validated issue is **unauthenticated root command execution over
+the web management interface** on a password-configured Tenda 5G06 V1.0. Plain
+protected routes redirect to login, but the same handlers are reachable without
+a session when the request path appends `%00.js`.
 
-The strongest validated web finding supports:
+Highest impact vector:
 
 ```text
 CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H = 9.8
 ```
+
+| ID | Severity | Finding | Impact | Primary PoC |
+| --- | --- | --- | --- | --- |
+| F01 | Critical | ZeroTier auth-bypass RCE | Unauthenticated attacker supplies `zerotier.tar`; firmware extracts it and executes `start_zerotier.sh` as `uid=0(root)`. Full confidentiality, integrity, and availability impact. | [`pocs/poc_zerotier_unauth_rce.py`](pocs/poc_zerotier_unauth_rce.py) |
+| F02 | Critical | Generic NUL-suffix web auth bypass | Protected handlers are dispatched without a valid session by appending `%00.js`. This is the primitive behind RCE, config theft, log theft, telnet enablement, ATE enablement, and protected API access. | [`pocs/poc_auth_bypass_telnet.py`](pocs/poc_auth_bypass_telnet.py), [`pocs/poc_auth_bypass_ate.py`](pocs/poc_auth_bypass_ate.py), [`pocs/poc_auth_bypass_getmodules.py`](pocs/poc_auth_bypass_getmodules.py), [`pocs/poc_auth_bypass_setmodules.py`](pocs/poc_auth_bypass_setmodules.py) |
+| F03 | High | Config backup disclosure and offline decode | Unauthenticated download of protected config backup; static AES-128-ECB key allows offline extraction of Wi-Fi PSKs, password hashes, WireGuard key material, CWMP credentials, and network configuration. | [`pocs/poc_auth_bypass_download_cfg.py`](pocs/poc_auth_bypass_download_cfg.py), [`tools/decode_tenda_config_backup.sh`](tools/decode_tenda_config_backup.sh) |
+| F04 | High | Log archive disclosure | Unauthenticated download of protected log archive. Logs may expose operational state, network identifiers, diagnostics, and sensitive event history. | [`pocs/poc_auth_bypass_download_log.py`](pocs/poc_auth_bypass_download_log.py) |
+| F05 | High | WFA/Sigma command injection | rc.d starts WFA/Sigma test daemons. Direct frames to stock `wfa_dut:8000` can inject shell metacharacters into command handlers; `wfa_ca` is not required if DUT port is reachable. | [`pocs/poc_wfa_direct_dut_cmd_injection.py`](pocs/poc_wfa_direct_dut_cmd_injection.py), [`pocs/poc_wfa_sta_get_mac_cmd_injection.py`](pocs/poc_wfa_sta_get_mac_cmd_injection.py), [`pocs/poc_wfa_sta_get_ip_config_cmd_injection.py`](pocs/poc_wfa_sta_get_ip_config_cmd_injection.py), [`pocs/poc_wfa_sta_set_ip_config_cmd_injection.py`](pocs/poc_wfa_sta_set_ip_config_cmd_injection.py) |
+| F06 | Medium | Session and CSRF weaknesses | Login cookie lacks `HttpOnly`, `Secure`, and `SameSite`; selected state-changing routes accept authenticated requests without a referer. These increase exploitability but are not needed for the unauthenticated RCE chain. | [`pocs/poc_cookie_missing_security_flags.py`](pocs/poc_cookie_missing_security_flags.py), [`pocs/poc_csrf_missing_referer_ate.py`](pocs/poc_csrf_missing_referer_ate.py) |
+
+Configured-state evidence:
+
+```text
+GET /goform/zerotier            -> 302 /login.html
+GET /goform/zerotier%00.js?...  -> executes supplied script as root
+
+GET /cgi-bin/DownloadCfg        -> 302 /login.html
+GET /cgi-bin/DownloadCfg%00.js  -> 200 config backup
+```
+
+See the full mapping in
+[`docs/FINDINGS_SUMMARY.md`](docs/FINDINGS_SUMMARY.md) and the validation log in
+[`docs/POC_RESULTS.md`](docs/POC_RESULTS.md).
 
 ## Quick Start
 

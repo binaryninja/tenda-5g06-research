@@ -17,6 +17,16 @@ rc.d container: auto-discovered by tenda-b104-rcd-procd* name prefix
 
 ## Auth Bypass
 
+| PoC | Finding | Severity | Impact |
+| --- | --- | --- | --- |
+| `poc_zerotier_unauth_rce.py` | F01: ZeroTier auth-bypass RCE | Critical | Executes attacker-supplied shell script as root. |
+| `poc_auth_bypass_telnet.py` | F02: NUL-suffix auth bypass | Critical | Starts `telnetd` and exposes tcp/23. |
+| `poc_auth_bypass_ate.py` | F02: NUL-suffix auth bypass | Critical | Starts manufacturing/ATE service. |
+| `poc_auth_bypass_download_cfg.py` | F03: Config backup disclosure/decode | High | Downloads and decrypts protected config backup. |
+| `poc_auth_bypass_download_log.py` | F04: Log archive disclosure | High | Downloads protected logs. |
+| `poc_auth_bypass_getmodules.py` | F02: NUL-suffix auth bypass | Critical | Reaches protected read API. |
+| `poc_auth_bypass_setmodules.py` | F02: NUL-suffix auth bypass | Critical | Reaches protected write API. |
+
 ```bash
 python3 pocs/poc_auth_bypass_telnet.py
 python3 pocs/poc_auth_bypass_ate.py
@@ -73,6 +83,11 @@ mount -o remount,mode=620,ptmxmode=666 "$root/dev/pts" 2>/dev/null || true
 
 ## Session/CSRF Weaknesses
 
+| PoC | Finding | Severity | Impact |
+| --- | --- | --- | --- |
+| `poc_cookie_missing_security_flags.py` | F06: cookie hardening missing | Medium | Session cookie lacks `HttpOnly`, `Secure`, `SameSite`. |
+| `poc_csrf_missing_referer_ate.py` | F06: weak CSRF guard | Medium | Authenticated no-referer request starts ATE service. |
+
 ```bash
 python3 pocs/poc_cookie_missing_security_flags.py
 python3 pocs/poc_csrf_missing_referer_ate.py
@@ -81,6 +96,13 @@ python3 pocs/poc_csrf_missing_referer_ate.py
 These require the configured login password. The default is `Tenda_888888`.
 
 ## WFA/Sigma Command Injection
+
+| PoC | Finding | Severity | Impact |
+| --- | --- | --- | --- |
+| `poc_wfa_direct_dut_cmd_injection.py` | F05: direct `wfa_dut` command injection | High | Sends raw TLV directly to stock `wfa_dut:8000`; no `wfa_ca` required. |
+| `poc_wfa_sta_get_mac_cmd_injection.py` | F05: Sigma command injection | High | Injects through `sta_get_mac_address`. |
+| `poc_wfa_sta_get_ip_config_cmd_injection.py` | F05: Sigma command injection | High | Injects through `sta_get_ip_config`. |
+| `poc_wfa_sta_set_ip_config_cmd_injection.py` | F05: Sigma command injection | High | Injects through `sta_set_ip_config`. |
 
 ```bash
 python3 pocs/poc_wfa_sta_get_mac_cmd_injection.py
